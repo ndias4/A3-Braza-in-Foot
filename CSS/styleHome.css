@@ -1,0 +1,143 @@
+@import url('https://fonts.googleapis.com/css2?family=Lexend:wght@100..900&display=swap');
+
+/* Reset básico */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  width: 100%;
+  overflow-x: hidden;
+  font-family: 'Lexend', sans-serif;
+}
+
+/* Header geral */
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  background: #003300;
+  padding: 10px 20px;
+  width: 100%;
+}
+
+/* Logo */
+.logo {
+  width: 11vw;
+  height: auto;
+}
+
+/* Navbar (botões do meio) */
+header .navbar {
+  display: flex;
+  gap: 25px;
+  flex-wrap: wrap;
+}
+
+header button {
+  background: transparent;
+  border: none;
+  color: #f1f1f1;
+  font-size: 16px;
+  font-weight: 300;
+  text-shadow: 0 0 0.5px rgb(255, 255, 255);
+  cursor: pointer;
+  padding: 10px 5px;
+}
+
+button:hover {
+  text-shadow: 0 0 5px white, 0 0 25px white;
+}
+
+/* Seção da direita (busca + ícones) */
+.icons {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+/* Barra de busca */
+.search {
+  display: flex;
+  align-items: center;
+  background: #f6f6f6;
+  opacity: 0.45;
+  border-radius: 11px;
+  padding: 6px 10px;
+  height: 38px;
+}
+
+.search:focus-within {
+  background: #f1f1f1;
+}
+
+.search-input {
+  border: none;
+  background: transparent;
+  font-size: 14px;
+  color: black;
+  width: 200px;
+  outline: none;
+}
+
+.search-input::placeholder {
+  color: rgba(0, 0, 0, 0.55);
+}
+
+/* Ícones */
+.icons img {
+  width: 26px;
+  height: 26px;
+  filter: brightness(0) invert(1); /* deixa branco */
+  cursor: pointer;
+}
+
+/* Banner */
+.banner img {
+  width: 100%;
+}
+
+.dropdown {
+    position: absolute;
+    top: 60px;
+    right: 20px;
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+    padding: 10px 20px;
+    min-width: 160px;
+    z-index: 999;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .dropdown a {
+    color: #003300;
+    text-decoration: none;
+    font-size: 14px;
+  }
+  
+  .dropdown a:hover {
+    text-decoration: underline;
+  }
+  
+  .dropdown p {
+    margin: 0;
+    font-weight: bold;
+    color: #003300;
+  }
+  
+  /* Oculta inicialmente */
+  .hidden {
+    display: none;
+  }
+
+  .carousel-item img {
+    height: 450px;
+    object-fit: cover;
+  }
+  

@@ -1,0 +1,93 @@
+@charset "UTF-8";
+
+*{
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+    font-family: sans-serif;
+}
+
+body{
+    width: 100%;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color:#023f00;
+}
+
+.container{
+    width: 50%;
+    height: 80vh;
+    display: inline-block;
+    box-shadow: 5px 5px 10px rgba(0, 0, 0, .212);
+    background-image:url(image/logo_1000x563.jpeg);
+    text-align: center;
+    background-position: center ;
+    color: white;
+    
+}
+
+
+form{
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    padding: 3rem;
+    
+}
+
+.botao-login{
+    display: flex;
+    align-items: center;
+   
+}
+
+.botao-login button{
+    border: none;
+    background-color:#b4fab4;
+    padding: 0.5rem 1.5rem;
+    cursor: pointer;
+    border-radius: 5px;
+    box-shadow: 1px 1px 5px;
+}
+
+.input-group {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    padding: 2.5rem 0;
+    
+}
+
+.input-email{
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 1.1rem;
+
+}
+
+.input-email input{
+    margin: 0.6rem;
+    padding: 0.8rem 0.2rem;
+    border: none;
+    border-radius: 10px;
+    box-shadow: 1px 1px 6px;
+}
+
+.input-senha{
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 1.1rem;
+
+}
+
+.input-senha input{
+    margin: 0.6rem;
+    padding: 0.8rem 0.2rem;
+    border: none;
+    border-radius: 10px;
+    box-shadow: 1px 1px 6px;
+}

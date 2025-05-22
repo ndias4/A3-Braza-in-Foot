@@ -75,13 +75,13 @@ $produtos = $stmt->fetchAll();
     <div id="carouselExampleFade" class="carousel slide carousel-fade" data-bs-ride="carousel">
         <div class="carousel-inner">
             <div class="carousel-item active">
-                <img src="../images/banner-vomero-18-17-04-25-desk.jpg" class="d-block w-100" alt="Banner 1">
+                <img src="../images/Banner Tenis 2.png" class="d-block w-100" alt="Banner 1">
             </div>
             <div class="carousel-item">
-                <img src="../images/banner-2.jpg" class="d-block w-100" alt="Banner 2">
+                <img src="../images/Banner Tenis 3.png" class="d-block w-100" alt="Banner 2">
             </div>
             <div class="carousel-item">
-                <img src="../images/banner-3.jpg" class="d-block w-100" alt="Banner 3">
+                <img src="../images/Banner Tenis 4.png" class="d-block w-100" alt="Banner 3">
             </div>
         </div>
         <button class="carousel-control-prev" type="button" data-bs-target="#carouselExampleFade" data-bs-slide="prev">
@@ -94,19 +94,27 @@ $produtos = $stmt->fetchAll();
         </button>
     </div>
 
-    <!-- Produtos -->
-    <main class="produtos-container">
-        <?php foreach ($produtos as $produto): ?>
-            <div class="produto-card">
-                <img src="<?= htmlspecialchars($produto['imagem']) ?>" alt="<?= htmlspecialchars($produto['nome']) ?>">
-                <h3><?= htmlspecialchars($produto['nome']) ?></h3>
-                <p><?= htmlspecialchars($produto['descricao']) ?></p>
-                <strong>R$ <?= number_format($produto['preco'], 2, ',', '.') ?></strong>
-                <button>Adicionar ao carrinho</button>
-            </div>
-        <?php endforeach; ?>
-    </main>
-
+   <main class="container my-5">
+  <h2 class="mb-4 text-center">Mais Vendidos</h2>
+  <div class="row row-cols-1 row-cols-md-3 g-4">
+    <?php foreach ($produtos as $produto): ?>
+      <div class="col">
+        <div class="card h-100 shadow-sm">
+          <<img src="../<?= htmlspecialchars($produto['imagem']) ?>" alt="<?= htmlspecialchars($produto['nome']) ?>" class="card-img-top">>
+          <div class="card-body">
+            <h5 class="card-title"><?= htmlspecialchars($produto['nome']) ?></h5>
+            <p class="card-text"><?= htmlspecialchars($produto['descricao']) ?></p>
+          </div>
+          <div class="card-footer d-flex justify-content-between align-items-center">
+            <strong>R$ <?= number_format($produto['preco'], 2, ',', '.') ?></strong>
+            <a href="produto.php?id=<?= $produto['id'] ?>" class="btn btn-success btn-sm">Ver detalhes</a>
+            </form>
+          </div>
+        </div>
+      </div>
+    <?php endforeach; ?>
+  </div>
+</main>
     <!-- Dropdown script -->
     <script>
         const userIcon = document.getElementById('user-icon');

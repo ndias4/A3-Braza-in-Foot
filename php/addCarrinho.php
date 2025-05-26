@@ -2,131 +2,175 @@
 session_start();
 require_once '../db_braza_in_foot/db.php';
 
-// Iniciar carrinho se não existir
+if (!isset($_SESSION['user_id'])) {
+    header('Location: login.php?erro=login_requerido');
+    exit;
+}
+
 if (!isset($_SESSION['carrinho'])) {
     $_SESSION['carrinho'] = [];
 }
 
-// Adicionar ao carrinho
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $id = $_POST['id'] ?? null;
-    $quantidade = intval($_POST['quantidade'] ?? 1);
+    if (isset($_POST['id'])) {
+        $id = filter_input(INPUT_POST, 'id', FILTER_VALIDATE_INT);
+        $quantidade = filter_input(INPUT_POST, 'quantidade', FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]]) ?? 1;
 
-    if ($id) {
-        if (isset($_SESSION['carrinho'][$id])) {
-            $_SESSION['carrinho'][$id] += $quantidade;
-        } else {
-            $_SESSION['carrinho'][$id] = $quantidade;
+        if ($id && $quantidade > 0) {
+            $_SESSION['carrinho'][$id] = ($_SESSION['carrinho'][$id] ?? 0) + $quantidade;
         }
+        header('Location: addCarrinho.php');
+        exit;
+    }
+
+    if (isset($_POST['update_id'])) {
+        $updateId = filter_input(INPUT_POST, 'update_id', FILTER_VALIDATE_INT);
+        $newQuantity = filter_input(INPUT_POST, 'new_quantity', FILTER_VALIDATE_INT, ['options' => ['min_range' => 0]]);
+
+        if ($updateId !== false && $newQuantity !== false) {
+            if ($newQuantity > 0) {
+                $_SESSION['carrinho'][$updateId] = $newQuantity;
+            } else {
+                unset($_SESSION['carrinho'][$updateId]);
+            }
+        }
+        header('Location: addCarrinho.php');
+        exit;
+    }
+
+    if (isset($_POST['remover'])) {
+        $removerId = filter_input(INPUT_POST, 'remover', FILTER_VALIDATE_INT);
+        if ($removerId) {
+            unset($_SESSION['carrinho'][$removerId]);
+        }
+        header('Location: addCarrinho.php');
+        exit;
     }
 }
 
-// Remover item
-if (isset($_GET['remover'])) {
-    unset($_SESSION['carrinho'][$_GET['remover']]);
-}
-
-// Buscar produtos do banco
 $produtos = [];
 $total = 0;
 
-foreach ($_SESSION['carrinho'] as $id => $qtd) {
-    $stmt = $pdo->prepare("SELECT * FROM produtos WHERE id = ?");
-    $stmt->execute([$id]);
-    $produto = $stmt->fetch();
-    
-    if ($produto) {
+if (!empty($_SESSION['carrinho'])) {
+    $ids = array_keys($_SESSION['carrinho']);
+    $placeholders = implode(',', array_fill(0, count($ids), '?'));
+    $stmt = $pdo->prepare("SELECT id, nome, preco, imagem FROM produtos WHERE id IN ($placeholders)");
+    $stmt->execute($ids);
+    $resultados = $stmt->fetchAll();
+
+    foreach ($resultados as $produto) {
+        $id = $produto['id'];
+        $qtd = $_SESSION['carrinho'][$id];
         $produto['quantidade'] = $qtd;
-        $produto['subtotal'] = $qtd * $produto['preco'];
+        $produto['subtotal'] = $produto['preco'] * $qtd;
         $total += $produto['subtotal'];
         $produtos[] = $produto;
     }
 }
-?>
 
+// Inclui o cabeçalho com o badge do carrinho
+include __DIR__ . '/header.php';
+?>
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-  <meta charset="UTF-8">
-  <title>Carrinho - Braza in Foot</title>
-  <link rel="stylesheet" href="../CSS/carrinho.css">
-  <link rel="stylesheet" href="../CSS/styleHome.css">
+  <meta charset="UTF-8" />
+  <title>Seu Carrinho - Braza in Foot</title>
+  <link rel="stylesheet" href="../CSS/addCarrinho.css" />
+  <link rel="stylesheet" href="../CSS/styleHome.css" />
 </head>
 <body>
-  <header>
-        <a href="home.php">
-            <img class="logo" src="../images/IMG-20250409-WA0006.jpg" alt="Logo">
-        </a>
+  <main class="container">
+    <h1 class="page-title">Resumo</h1>
 
-        <div class="navbar">
-            <a href="catalogo.php?categoria=novidades"><button class="nav-btn">Novidades</button></a>
-            <a href="catalogo.php?categoria=masculino"><button class="nav-btn">Masculino</button></a>
-            <a href="catalogo.php?categoria=feminino"><button class="nav-btn">Feminino</button></a>
-            <a href="catalogo.php?categoria=infantil"><button class="nav-btn">Infantil</button></a>
-            <a href="catalogo.php?categoria=esportivo"><button class="nav-btn">Esportivo</button></a>
+    <?php if (empty($produtos)): ?>
+      <p class="empty-cart-message">Seu carrinho está vazio.</p>
+    <?php else: ?>
+      <section class="cart-details">
+        <table class="cart-table">
+          <thead>
+            <tr>
+              <th>Produto</th>
+              <th>Quantidade</th>
+              <th>Preço Unitário</th>
+              <th>Preço Total</th>
+              <th>Ação</th>
+            </tr>
+          </thead>
+          <tbody>
+            <?php foreach ($produtos as $produto): ?>
+              <tr>
+                <td class="product-description" data-label="Produto">
+                  <div class="product-item-info">
+                    <?php if (!empty($produto['imagem'])): ?>
+                      <img src="../<?= htmlspecialchars($produto['imagem']) ?>" alt="<?= htmlspecialchars($produto['nome']) ?>" width="80">
+                    <?php endif; ?>
+                    <span class="product-name"><?= htmlspecialchars($produto['nome']) ?></span>
+                  </div>
+                </td>
+                <td class="product-quantity-cell" data-label="Quantidade">
+                  <form action="addCarrinho.php" method="post" class="quantity-form">
+                    <input type="hidden" name="update_id" value="<?= $produto['id'] ?>">
+                    <input type="number"
+                           name="new_quantity"
+                           value="<?= $produto['quantidade'] ?>"
+                           min="0" class="quantity-input"
+                           aria-label="Quantidade para <?= htmlspecialchars($produto['nome']) ?>">
+                  </form>
+                </td>
+                <td class="product-unit-price" data-label="Preço Unitário">R$ <?= number_format($produto['preco'], 2, ',', '.') ?></td>
+                <td class="product-total-price" data-label="Preço Total">R$ <?= number_format($produto['subtotal'], 2, ',', '.') ?></td>
+                <td class="product-action-cell">
+                  <form method="post" action="addCarrinho.php">
+                    <input type="hidden" name="remover" value="<?= $produto['id'] ?>">
+                    <button type="submit" class="remove-item-icon" aria-label="Remover <?= htmlspecialchars($produto['nome']) ?>">❌</button>
+                  </form>
+                </td>
+              </tr>
+            <?php endforeach; ?>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="cart-summary-total">
+        <div class="summary-line">
+            <span>Total:</span>
+            <span class="total-value">R$ <?= number_format($total, 2, ',', '.') ?></span>
         </div>
+      </section>
 
-        <div class="icons">
-            <div class="search">
-                <input class="search-input" type="search" placeholder="Encontre o que você procura">
-            </div>
+      <section class="cart-actions">
+        <a href="home.php" class="button secondary-button">Continuar Comprando</a>
+        <a href="pagamento.php" class="button success-button">Finalizar Compra</a>
+      </section>
+    <?php endif; ?>
+  </main>
 
-            <div class="busca">
-                <a href="#">
-                    <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e3e3e3"><path d="M784-120 532-372q-30 24-69 38t-83 14q-109 0-184.5-75.5T120-580q0-109 75.5-184.5T380-840q109 0 184.5 75.5T640-580q0 44-14 83t-38 69l252 252-56 56ZM380-400q75 0 127.5-52.5T560-580q0-75-52.5-127.5T380-760q-75 0-127.5 52.5T200-580q0 75 52.5 127.5T380-400Z"/></svg>
-                </a>
-            </div>
+  <script>
+    document.querySelectorAll('.quantity-input').forEach(input => {
+        input.addEventListener('change', function() {
+            if (parseInt(this.value) < 0) {
+                this.value = 0;
+            }
+            this.closest('form').submit();
+        });
+    });
+  </script>
 
-            <div class="user">
-                <a href="#" id="user-icon">
-                    <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e3e3e3"><path d="M480-480q-66 0-113-47t-47-113q0-66 47-113t113-47q66 0 113 47t47 113q0 66-47 113t-113 47ZM160-160v-112q0-34 17.5-62.5T224-378q62-31 126-46.5T480-440q66 0 130 15.5T736-378q29 15 46.5 43.5T800-272v112H160Zm80-80h480v-32q0-11-5.5-20T700-306q-54-27-109-40.5T480-360q-56 0-111 13.5T260-306q-9 5-14.5 14t-5.5 20v32Zm240-320q33 0 56.5-23.5T560-640q0-33-23.5-56.5T480-720q-33 0-56.5 23.5T400-640q0 33 23.5 56.5T480-560Zm0-80Zm0 400Z"/></svg>
-                </a>
-                <div id="user-dropdown" class="dropdown hidden">
-                    <p>Bem-vindo, <?= $_SESSION['user_nome'] ?? 'Usuário'; ?>!</p>
-                    <hr>
-                    <a href="#">Perfil</a>
-                    <a href="../index.html">Sair</a>
-                </div>
-            </div>
-
-            <div class="carrinho">
-                <a href="#">
-                    <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e3e3e3"><path d="M280-80q-33 0-56.5-23.5T200-160q0-33 23.5-56.5T280-240q33 0 56.5 23.5T360-160q0 33-23.5 56.5T280-80Zm400 0q-33 0-56.5-23.5T600-160q0-33 23.5-56.5T680-240q33 0 56.5 23.5T760-160q0 33-23.5 56.5T680-80ZM246-720l96 200h280l110-200H246Zm-38-80h590q23 0 35 20.5t1 41.5L692-482q-11 20-29.5 31T622-440H324l-44 80h480v80H280q-45 0-68-39.5t-2-78.5l54-98-144-304H40v-80h130l38 80Zm134 280h280-280Z"/></svg>
-                </a>
-            </div>
-        </div>
-    </header>
-  <h1>Seu Carrinho</h1>
-
-  <?php if (empty($produtos)): ?>
-    <p>Seu carrinho está vazio.</p>
-  <?php else: ?>
-    <table>
-      <thead>
-        <tr>
-          <th>Produto</th>
-          <th>Quantidade</th>
-          <th>Preço</th>
-          <th>Subtotal</th>
-          <th>Ação</th>
-        </tr>
-      </thead>
-      <tbody>
-        <?php foreach ($produtos as $produto): ?>
-          <tr>
-            <td><?= htmlspecialchars($produto['nome']) ?></td>
-            <td><?= $produto['quantidade'] ?></td>
-            <td>R$ <?= number_format($produto['preco'], 2, ',', '.') ?></td>
-            <td>R$ <?= number_format($produto['subtotal'], 2, ',', '.') ?></td>
-            <td><a href="?remover=<?= $produto['id'] ?>">Remover</a></td>
-          </tr>
-        <?php endforeach; ?>
-      </tbody>
-    </table>
-
-    <h3>Total: R$ <?= number_format($total, 2, ',', '.') ?></h3>
-
-    <a href="pagamento.php"><button>Ir para pagamento</button></a>
-  <?php endif; ?>
+  <footer class="rodape">
+    <div class="rodape-container">
+      <div class="rodape-info">
+        <img class="logo" src="../images/IMG-20250409-WA0006.jpg" alt="Logo Braza in Foot" />
+        <p>CNPJ: 12.345.678/0001-90</p>
+        <p>Rua Exemplo, 123 - São Paulo/SP</p>
+        <p>CEP: 01234-000</p>
+        <p>Telefone: (11) 99999-9999</p>
+        <p>Email: contato@brazainfoot.com</p>
+      </div>
+      <div class="rodape-direitos">
+        <p>&copy; <?= date('Y') ?> Braza in Foot. Todos os direitos reservados.</p>
+      </div>
+    </div>
+  </footer>
 </body>
 </html>
